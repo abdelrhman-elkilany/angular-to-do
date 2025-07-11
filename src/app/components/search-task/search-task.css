@@ -1,0 +1,13 @@
+.search-input {
+    position: relative;
+    border: 1px solid black;
+    border-radius: 25px;
+    cursor: pointer;
+}
+
+.search-icon {
+    max-width: 50px;
+    position: absolute;
+    right: 1rem;
+    cursor: pointer;
+}

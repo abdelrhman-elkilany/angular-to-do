@@ -1,0 +1,15 @@
+<div class="task-card">
+  <p class="h5 d-flex justify-content-center mt-2">{{status}}</p>
+  <app-search-task [target]="status"> </app-search-task>
+  <hr />
+   
+  @for (task of tasks(); track $index) {
+    <app-task [data]="task" [status] = "status"></app-task>
+  }
+  
+
+  @if(status === 'Pending') {
+    <app-add-task></app-add-task>
+   
+  }
+</div>

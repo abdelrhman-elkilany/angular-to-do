@@ -1,0 +1,7 @@
+app-list {
+    flex: 0 0 auto;
+    width: fit-content;
+    min-width: 50px;
+    margin: 0 10px;
+  }
+  
