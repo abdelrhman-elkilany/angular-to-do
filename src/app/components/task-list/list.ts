@@ -1,6 +1,7 @@
 import {
   Component,
   computed,
+  effect,
   inject,
   Input,
   signal,
@@ -21,18 +22,21 @@ import { TasksService } from '../../services/tasks-service';
 export class List implements OnInit {
   @Input() status!: 'Pending' | 'Done';
   taskService = inject(TasksService);
-
-  tasks = signal<string[]>([]);
   filteredTasks = signal<string[]>([]);
 
+  tasksEffect = effect(() => {
+    this.filteredTasks.set(
+      this.status === 'Pending'
+        ? this.taskService.pendingTasks()
+        : this.taskService.doneTasks()
+    );
+  });
+
   ngOnInit(): void {
+    this.taskService.spinner.set(true);
     this.taskService.getTasks(this.status).subscribe({
-      next: (tasks: string[]) => {
-        this.tasks.set(tasks);
-        this.filteredTasks.set(tasks);
-      },
-      error: (err) => {
-        console.error('Error fetching tasks:', err);
+      next: () => {
+        this.taskService.spinner.set(false);
       }
     });
   }
@@ -40,10 +44,16 @@ export class List implements OnInit {
   search(data: { searchInput: string; target: string }) {
     if (data.target == this.status) {
       if (!data.searchInput) {
-        this.filteredTasks.set(this.tasks());
+        this.filteredTasks.set(
+          this.status === 'Pending'
+            ? this.taskService.pendingTasks()
+            : this.taskService.doneTasks()
+        );
       }
-      this.filteredTasks.update( () => {
-        return this.tasks().filter((f:string) => f.toLowerCase().includes(data.searchInput))
+      this.filteredTasks.update((fullTasks: string[]) => {
+        return fullTasks.filter((f: string) =>
+          f.toLowerCase().includes(data.searchInput)
+        );
       });
     }
   }

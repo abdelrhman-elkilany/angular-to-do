@@ -7,8 +7,9 @@ import { filter, map, pipe, tap } from 'rxjs';
 })
 export class TasksService {
   httpClient = inject(HttpClient);
-  pendingTasks = signal<string[]>([]); 
-  doneTasks = signal<string[]>([]); 
+  pendingTasks = signal<string[]>([]);
+  doneTasks = signal<string[]>([]);
+  spinner = signal(false);
 
   getTasks(status: 'Pending' | 'Done') {
     return this.httpClient
@@ -35,7 +36,75 @@ export class TasksService {
           entries
             .filter((entry) => !!entry.document?.fields?.name?.stringValue)
             .map((entry) => entry.document.fields.name.stringValue)
-        )
+        ),
+        tap((tasks: string[]) => {
+          if (status === 'Pending') {
+            this.pendingTasks.set(tasks);
+          }
+          if (status === 'Done') {
+            this.doneTasks.set(tasks);
+          }
+        })
       );
+  }
+
+  markAsCompleted(task: string) {
+    this.spinner.set(true);
+    this.updateTaskStatus(task, 'Done').subscribe({
+      next: () => {
+        this.pendingTasks.update((tasks) => {
+          const index = tasks.indexOf(task);
+          if (index > -1) {
+            tasks.splice(index, 1);
+          }
+          return tasks;
+        });
+        this.doneTasks.update((tasks) => {
+          tasks.push(task);
+          return tasks;
+        });
+        this.spinner.set(false);
+      },
+      error: (error) => {
+        console.error(`Error marking task ${task} as completed:`, error);
+      },
+    });
+  }
+
+  markAsPending(task: string) {
+    this.spinner.set(true);
+    this.updateTaskStatus(task, 'Pending').subscribe({
+      next: () => {
+        this.doneTasks.update((tasks) => {
+          const index = tasks.indexOf(task);
+          if (index > -1) {
+            tasks.splice(index, 1);
+          }
+          return tasks;
+        });
+        this.pendingTasks.update((tasks) => {
+          tasks.push(task);
+          return tasks;
+        });
+        this.spinner.set(false);
+      },
+      error: (error) => {
+        console.error(`Error marking task ${task} as Pending:`, error);
+      },
+    });
+  }
+
+  updateTaskStatus(task: string, status: 'Pending' | 'Done') {
+    return this.httpClient.patch(
+      'https://firestore.googleapis.com/v1/projects/to-do-bda69/databases/(default)/documents/toDo/' +
+        task +
+        '?updateMask.fieldPaths=name&updateMask.fieldPaths=status',
+      {
+        fields: {
+          name: { stringValue: task },
+          status: { stringValue: status.toLowerCase() },
+        },
+      }
+    );
   }
 }
