@@ -35,15 +35,7 @@ export class TasksService {
           entries
             .filter((entry) => !!entry.document?.fields?.name?.stringValue)
             .map((entry) => entry.document.fields.name.stringValue)
-        ),
-        tap((tasks : string[]) => {
-          if (status === 'Pending') {
-            this.pendingTasks.set(tasks);
-          }
-          if (status === 'Done') {
-            this.doneTasks.set(tasks);
-          }
-        })
+        )
       );
   }
 }

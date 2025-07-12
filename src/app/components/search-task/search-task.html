@@ -1,10 +1,15 @@
 <div class="row m-1 task-search">
-  <input class="search-input" type="text" placeholder="Search" />
+  <input
+    class="search-input"
+    type="text"
+    placeholder="Search"
+    [(ngModel)]="searchInput"
+  />
   <img
     src="https://cdn-icons-png.flaticon.com/512/2811/2811806.png"
     alt="search"
-    onClick="searchToDo(event)"
     class="search-icon"
     id="searchToDo"
+    (click)="searchClick()"
   />
 </div>
