@@ -20,6 +20,11 @@ export class AddTask {
       this.tasksService.addTask(this.task).subscribe({
         next: ()=>{
           this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error adding task:', error);
+          this.tasksService.errorMessage.set('Failed to add task');
+          this.isLoading = false;
         }
       });
     }

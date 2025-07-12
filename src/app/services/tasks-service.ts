@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal, type Signal } from '@angular/core';
-import { filter, map, pipe, tap } from 'rxjs';
+import { catchError, filter, map, pipe, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -10,6 +10,7 @@ export class TasksService {
   pendingTasks = signal<string[]>([]);
   doneTasks = signal<string[]>([]);
   spinner = signal(false);
+  errorMessage = signal<string | null>(null);
 
   getTasks(status: 'Pending' | 'Done') {
     return this.httpClient
@@ -44,6 +45,11 @@ export class TasksService {
           if (status === 'Done') {
             this.doneTasks.set(tasks);
           }
+        }),
+        catchError((error) => {
+          console.error('Error fetching tasks:', error);
+          this.errorMessage.set('Failed to load tasks');
+          return [];
         })
       );
   }
@@ -65,8 +71,10 @@ export class TasksService {
         });
         this.spinner.set(false);
       },
-      error: (error) => {
-        console.error(`Error marking task ${task} as completed:`, error);
+      error: (error) => {      
+          console.error('Error marking task as complete:', error);
+          this.errorMessage.set('Failed to mark task as completed');
+          this.spinner.set(false);
       },
     });
   }
@@ -89,7 +97,10 @@ export class TasksService {
         this.spinner.set(false);
       },
       error: (error) => {
+        this.errorMessage.set('Failed to mark task as Pending');
+        this.spinner.set(false);
         console.error(`Error marking task ${task} as Pending:`, error);
+
       },
     });
   }
