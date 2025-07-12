@@ -107,4 +107,21 @@ export class TasksService {
       }
     );
   }
+
+  addTask(task: string) {
+    return this.httpClient.patch(
+      'https://firestore.googleapis.com/v1/projects/to-do-bda69/databases/(default)/documents/toDo/' +
+        task,
+      {
+        fields: {
+          name: { stringValue: task },
+          status: { stringValue: 'pending' },
+        },
+      }
+    ).pipe(
+      tap( () =>{
+        this.pendingTasks.update((tasks) => [...tasks, task]);
+      })
+    );
+  }
 }
